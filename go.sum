@@ -296,8 +296,8 @@ github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINE
 github.com/pkg/profile v1.2.1/go.mod h1:hJw3o1OdXxsrSjjVksARp5W95eeEaEfptyVZyv6JUPA=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/pokt-network/tendermint v0.32.11-0.20211001202302-a3ebb03100b5 h1:GYcuPhGPsy++P74UEhWzhEdF3pGguEvN+d2dmS87wgk=
-github.com/pokt-network/tendermint v0.32.11-0.20211001202302-a3ebb03100b5/go.mod h1:NGt/kaVxb0LscgRDbLlSK3t+b9SiZl1js1lpquIK5G4=
+github.com/pokt-network/tendermint v0.32.11-0.20211001211547-b46d062dd64c h1:arhaGTF/VL0hskC+ZYtyHNNZ2c84ZYZO0SPc0D0ALFs=
+github.com/pokt-network/tendermint v0.32.11-0.20211001211547-b46d062dd64c/go.mod h1:NGt/kaVxb0LscgRDbLlSK3t+b9SiZl1js1lpquIK5G4=
 github.com/posener/complete v1.1.1/go.mod h1:em0nMJCgc9GFtwrmVmEMR/ZL6WyhyjMBndrE9hABlRI=
 github.com/prometheus/client_golang v0.9.1/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
 github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829/go.mod h1:p2iRAGwDERtqlqzRXnrOVns+ignqQo//hLXqYxZYVNs=
