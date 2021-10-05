@@ -103,15 +103,15 @@ func start(cmd *cobra.Command, args []string) {
 
 	defer func() {
 		sig := <-signalChannel
+		fmt.Printf("Exit signal %s received\n", sig)
+		fmt.Printf("Shutdown phase 1")
 		app.ShutdownPocketCore()
+		fmt.Printf("Shutdown phase 2")
 		err := tmNode.Stop()
 		if err != nil {
 			fmt.Println(err)
-			return
 		}
-		message := fmt.Sprintf("Exit signal %s received\n", sig)
-		fmt.Println(message)
-		os.Exit(0)
+		fmt.Printf("Shutdown finished")
 	}()
 }
 
