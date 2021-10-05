@@ -101,18 +101,16 @@ func start(cmd *cobra.Command, args []string) {
 		os.Kill, //nolint
 		os.Interrupt)
 
-	defer func() {
-		sig := <-signalChannel
-		fmt.Printf("Exit signal %s received\n", sig)
-		fmt.Printf("Shutdown phase 1")
-		app.ShutdownPocketCore()
-		fmt.Printf("Shutdown phase 2")
-		err := tmNode.Stop()
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Printf("Shutdown finished")
-	}()
+	sig := <-signalChannel
+	fmt.Printf("Exit signal %s received\n", sig)
+	fmt.Printf("Shutdown phase 1")
+	app.ShutdownPocketCore()
+	fmt.Printf("Shutdown phase 2")
+	err := tmNode.Stop()
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Printf("Shutdown finished")
 }
 
 // resetCmd represents the reset command
