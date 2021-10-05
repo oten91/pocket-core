@@ -98,6 +98,7 @@ func start(cmd *cobra.Command, args []string) {
 		syscall.SIGTERM,
 		syscall.SIGINT,
 		syscall.SIGQUIT,
+		syscall.SIGABRT,
 		syscall.SIGKILL)
 
 	fmt.Println("Node is up.")
