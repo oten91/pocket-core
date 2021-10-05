@@ -98,19 +98,19 @@ func start(cmd *cobra.Command, args []string) {
 		syscall.SIGTERM,
 		syscall.SIGINT,
 		syscall.SIGQUIT,
-		os.Kill, //nolint
-		os.Interrupt)
+		syscall.SIGKILL)
+
 	fmt.Println("Node is up.")
 	sig := <-signalChannel
 	fmt.Printf("Exit signal %s received\n", sig)
-	fmt.Printf("Shutdown phase 1")
+	fmt.Printf("Shutdown phase 1\n")
 	app.ShutdownPocketCore()
-	fmt.Printf("Shutdown phase 2")
+	fmt.Printf("Shutdown phase 2\n")
 	err := tmNode.Stop()
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Printf("Shutdown finished")
+	fmt.Printf("Shutdown finished\n")
 }
 
 // resetCmd represents the reset command
