@@ -100,7 +100,7 @@ func start(cmd *cobra.Command, args []string) {
 		syscall.SIGQUIT,
 		os.Kill, //nolint
 		os.Interrupt)
-
+	fmt.Println("Node is up.")
 	sig := <-signalChannel
 	fmt.Printf("Exit signal %s received\n", sig)
 	fmt.Printf("Shutdown phase 1")
