@@ -58,7 +58,7 @@ func (m MemoryCache) Get(height int64, key []byte) ([]byte, error) {
 	return nil, errors.New("invalid height for get")
 }
 
-func (m MemoryCache) Has(height int64, key []byte) (bool, error) {
+func (m MemoryCache) Has(_ int64, _ []byte) (bool, error) {
 	return false, errors.New("not implemented")
 }
 
@@ -117,7 +117,12 @@ func (m MemoryCache) Commit(height int64) {
 	m.pastHeights[lowestIdx].orderedKeys = orderedKeys
 }
 
+// Initialize - warms up the cache with provided data.
+// If many heights are to be introduced, the latest height should be introduced last.
+// Repeating any height but the latest is relatively harmless: worst case scenario
+// is evicting heights before their time and reducing the cache's effectiveness.
 func (m MemoryCache) Initialize(currentData map[string]string, version int64) {
+	m.Commit(m.current.height)
 	m.current.data = currentData
 	m.current.height = version
 }
