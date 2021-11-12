@@ -2,6 +2,7 @@ package iavl
 
 import (
 	"fmt"
+	"github.com/pokt-network/pocket-core/store/rootmulti/heightcache"
 	"io"
 	"log"
 	"sync"
@@ -24,38 +25,63 @@ const (
 
 // LoadStore loads the iavl store
 func LoadStore(db dbm.DB, id types.CommitID, pruning types.PruningOptions, lazyLoading bool, cache types.SingleStoreCache) (types.CommitStore, error) {
-	var err error
-
 	tree, err := NewMutableTree(db, defaultIAVLCacheSize)
 	if err != nil {
 		return nil, err
 	}
+	if cache.IsValid() {
+		startingVersion := id.Version - 25
+		if startingVersion < 0 { // not worth warming up for any such low height.
+			startingVersion = id.Version
+		}
+		movingVersion := startingVersion
+		var cacheData = map[int64]map[string]string{}
 
-	if lazyLoading {
-		_, err = tree.LazyLoadVersion(id.Version)
-	} else {
-		_, err = tree.LoadVersion(id.Version)
-	}
+		for ; movingVersion <= id.Version; movingVersion++ {
+			if lazyLoading {
+				_, err = tree.LazyLoadVersion(movingVersion)
+			} else {
+				_, err = tree.LoadVersion(movingVersion)
+			}
 
-	if err != nil {
-		return nil, err
-	}
+			if err != nil {
+				return nil, err
+			}
 
-	iavl := UnsafeNewStore(tree, int64(0), int64(0), cache)
-	iavl.SetPruning(pruning)
+			cacheWarmerStore := UnsafeNewStore(tree, int64(0), int64(0), heightcache.InvalidCache{})
 
-	if iavl.cache.IsValid() {
-		cacheDatasetIterator, _ := iavl.Iterator(nil, nil)
-		cacheDataset := make(map[string]string, 10)
-		for cacheDatasetIterator.Valid() {
-			cacheDataset[string(cacheDatasetIterator.Key())] = string(cacheDatasetIterator.Value())
-			cacheDatasetIterator.Next()
+			cacheDatasetIterator, _ := cacheWarmerStore.Iterator(nil, nil)
+			cacheableData := make(map[string]string, 10)
+			for cacheDatasetIterator.Valid() {
+				cacheableData[string(cacheDatasetIterator.Key())] = string(cacheDatasetIterator.Value())
+				cacheDatasetIterator.Next()
+			}
+			cacheData[movingVersion] = cacheableData
+			log.Printf("Warmed height %d\n", movingVersion)
 		}
 
-		iavl.cache.Initialize(cacheDataset, iavl.tree.Version())
-		log.Println("Cache warmed.")
+		iavl := UnsafeNewStore(tree, int64(0), int64(0), cache)
+		iavl.SetPruning(pruning)
+		for cacheableHeight := startingVersion; cacheableHeight <= id.Version; cacheableHeight++ {
+			iavl.cache.Initialize(cacheData[cacheableHeight], cacheableHeight)
+		}
+		log.Println("Store cache warm.")
+		return iavl, nil
+	} else {
+		if lazyLoading {
+			_, err = tree.LazyLoadVersion(id.Version)
+		} else {
+			_, err = tree.LoadVersion(id.Version)
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		iavl := UnsafeNewStore(tree, int64(0), int64(0), cache)
+		iavl.SetPruning(pruning)
+		return iavl, nil
 	}
-	return iavl, nil
 }
 
 //----------------------------------------
