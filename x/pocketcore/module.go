@@ -3,15 +3,13 @@ package pocketcore
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
-	"time"
-
 	"github.com/pokt-network/pocket-core/codec"
 	sdk "github.com/pokt-network/pocket-core/types"
 	"github.com/pokt-network/pocket-core/types/module"
 	"github.com/pokt-network/pocket-core/x/pocketcore/keeper"
 	"github.com/pokt-network/pocket-core/x/pocketcore/types"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"sync"
 )
 
 // type check to ensure the interface is properly implemented
@@ -51,8 +49,8 @@ func (AppModuleBasic) ValidateGenesis(bytes json.RawMessage) error {
 
 // "AppModule" - The higher level building block for a module
 type AppModule struct {
-	AppModuleBasic       // a fundamental structure for all mods
-	keeper keeper.Keeper // responsible for store operations
+	AppModuleBasic               // a fundamental structure for all mods
+	keeper         keeper.Keeper // responsible for store operations
 }
 
 func (am AppModule) UpgradeCodec(ctx sdk.Ctx) {
@@ -106,9 +104,9 @@ func (am AppModule) EndBlock(ctx sdk.Ctx, _ abci.RequestEndBlock) []abci.Validat
 		// use the offset as a trigger to see if it's time to attempt to submit proofs
 		if (ctx.BlockHeight()+int64(addr[0]))%blocksPerSession == 1 && ctx.BlockHeight() != 1 {
 			// run go routine because cannot access TmNode during end-block period
+			var wg sync.WaitGroup
+			wg.Add(1)
 			go func() {
-				// use this sleep timer to bypass the beginBlock lock over transactions
-				time.Sleep(time.Duration(rand.Intn(5000)) * time.Millisecond)
 				s, err := am.keeper.TmNode.Status()
 				if err != nil {
 					ctx.Logger().Error(fmt.Sprintf("could not get status for tendermint node (cannot submit claims/proofs in this state): %s", err.Error()))
@@ -122,7 +120,9 @@ func (am AppModule) EndBlock(ctx sdk.Ctx, _ abci.RequestEndBlock) []abci.Validat
 						types.ClearSessionCache()
 					}
 				}
+				wg.Done()
 			}()
+			wg.Wait()
 		}
 	} else {
 		ctx.Logger().Error("could not get self address in end block")
