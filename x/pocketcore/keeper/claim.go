@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/pokt-network/pocket-core/x/pocketcore"
 
 	"github.com/pokt-network/pocket-core/crypto"
 	sdk "github.com/pokt-network/pocket-core/types"
@@ -82,6 +83,10 @@ func (k Keeper) SendClaimTx(ctx sdk.Ctx, keeper Keeper, n client.Client, claimTx
 			ctx.Logger().Error(fmt.Sprintf("an error occured executing the claim transaciton: \n%s", err.Error()))
 		}
 	}
+}
+
+func (k Keeper) EnqueueSendClaimTx(ctx sdk.Ctx) {
+	k.SendClaimTx(ctx, k, k.TmNode, pocketcore.ClaimTx)
 }
 
 // "ValidateClaim" - Validates a claim message and returns an sdk error if invalid

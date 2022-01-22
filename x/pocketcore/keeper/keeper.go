@@ -8,6 +8,10 @@ import (
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
+type Job struct {
+	Ctx sdk.Ctx
+}
+
 // Keeper maintains the link to storage and exposes getter/setter methods for the various parts of the state machine
 type Keeper struct {
 	authKeeper        types.AuthKeeper
@@ -18,11 +22,14 @@ type Keeper struct {
 	Paramstore        sdk.Subspace
 	storeKey          sdk.StoreKey // Unexposed key to access store from sdk.Context
 	Cdc               *codec.Codec // The wire codec for binary encoding/decoding.
+	C                 chan Job
 }
 
 // NewKeeper creates new instances of the pocketcore module Keeper
 func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec, authKeeper types.AuthKeeper, posKeeper types.PosKeeper, appKeeper types.AppsKeeper, hostedChains *types.HostedBlockchains, paramstore sdk.Subspace) Keeper {
-	return Keeper{
+	c := make(chan Job, 100)
+
+	k := Keeper{
 		authKeeper:        authKeeper,
 		posKeeper:         posKeeper,
 		appKeeper:         appKeeper,
@@ -30,10 +37,21 @@ func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec, authKeeper types.AuthKee
 		Paramstore:        paramstore.WithKeyTable(ParamKeyTable()),
 		storeKey:          storeKey,
 		Cdc:               cdc,
+		C:                 c,
+	}
+
+	go k.worker(c)
+
+	return k
+}
+
+func (k Keeper) worker(c <-chan Job) {
+	for job := range c {
+		k.EnqueueSendClaimTx(job.Ctx)
 	}
 }
 
-func (k Keeper) Codec() *codec.Codec{
+func (k Keeper) Codec() *codec.Codec {
 	return k.Cdc
 }
 
@@ -49,7 +67,7 @@ func (k Keeper) UpgradeCodec(ctx sdk.Ctx) {
 	}
 }
 
-func (k Keeper) ConvertState(ctx sdk.Ctx){
+func (k Keeper) ConvertState(ctx sdk.Ctx) {
 	k.Cdc.SetUpgradeOverride(false)
 	params := k.GetParams(ctx)
 	claims := k.GetAllClaims(ctx)
